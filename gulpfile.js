@@ -1,46 +1,36 @@
-var gulp = require('gulp');
+var gulp       = require('gulp');
 var sourcemaps = require('gulp-sourcemaps');
-var source = require('vinyl-source-stream');
-var buffer = require('vinyl-buffer');
-var browserify = require('browserify');
-var watchify = require('watchify');
-var babel = require('babelify');
-var glob  = require('glob');//changed from require-globify
-var webserver = require('gulp-webserver');
+var source     = require('vinyl-source-stream');
+var buffer     = require('vinyl-buffer');
+var glob       = require('glob');//changed from require-globify
+var webserver  = require('gulp-webserver');
+var lazypipe   = require("lazypipe");
+var babel      = require('gulp-babel');
 
-var files = glob.sync('app/**/*.js');
+var app = {
+    paths: {
+        scripts : 'app/scripts/**/*.js',
+        styles  : 'app/sass/**/*.scss'
+    }
+};
 
-function compileScripts(watch) {
-
-  var bundler = watchify(
-      browserify({ entries: files, debug: true }).transform(babel, { presets: ["es2015", "react"] })
-  );
-
-  function rebundle() {
-    bundler.bundle()
-      .on('error', function(err) { console.error(err); this.emit('end'); })
-      .pipe(source('build.js'))
-      .pipe(buffer())
-      .pipe(sourcemaps.init({ loadMaps: true }))
-      .pipe(sourcemaps.write('./'))
-      .pipe(gulp.dest('./.tmp'));
-  }
-
-  if (watch) {
-    bundler.on('update', function() {
-      console.log('-> bundling...');
-      rebundle();
-    });
-  }
-
-  rebundle();
-}
-
-//Tasks
+//Tasks::Prod
 gulp.task('build', function() { return compileScripts(); });
-gulp.task('watch', function() {
-    var isWatch = true;//used just to rebundle the js to the tmp folder
-    gulp.watch('app/**/*.js', compileScripts(isWatch) );
+
+gulp.task('dev:watch', function() {
+    gulp.watch(app.paths.scripts, ['transpile:client'] ); //changed from  compileScripts(true)
+});
+
+//Tasks:dev
+//lazy pipes are used when you want to set an order of execution in your pipes if you don't add the lazypipe for the
+//transpileClient function it will not execute on the right order (haven't digged depper on this)
+//
+gulp.task('transpile:client', function() {
+    return  gulp.src(app.paths.scripts)
+            .pipe(babel({
+                presets: ['es2015','react']
+            }))
+            .pipe(gulp.dest('.tmp'));
 });
 
 gulp.task('webserver', function() {
@@ -60,4 +50,5 @@ gulp.src('./app')
     }));
 });
 
-gulp.task('default', ['watch','webserver']);
+gulp.task('default', ['dev:watch','webserver']);
+//gulp.task('prod:dist',[]); //under development
