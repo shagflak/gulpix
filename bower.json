@@ -1,0 +1,10 @@
+{
+  "name": "gulpix",
+  "version": "0.0.0",
+  "dependencies": {
+    "bootstrap": "^3.2.0",
+    "redux": "https://cdnjs.cloudflare.com/ajax/libs/redux/1.0.1/redux.js"
+  },
+  "appPath": "app",
+  "moduleName": "gulpix"
+}
