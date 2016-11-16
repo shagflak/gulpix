@@ -1,17 +1,23 @@
 var gulp       = require('gulp');
 var sourcemaps = require('gulp-sourcemaps');
-var source     = require('vinyl-source-stream');
-var buffer     = require('vinyl-buffer');
-var glob       = require('glob');//changed from require-globify
-var webserver  = require('gulp-webserver');
+
 var lazypipe   = require("lazypipe");
 var babel      = require('gulp-babel');
+var wiredep    = require('wiredep').stream;
+var server = require('gulp-server-livereload');
+
+var config = {
+    host: 'localhost',
+    port: 9000
+};
 
 var app = {
     paths: {
         scripts : 'app/scripts/**/*.js',
         styles  : 'app/sass/**/*.scss',
-        index   : 'app/index.html'
+        index   : 'app/index.html',
+        tempFolder : '.tmp',
+        appFolderPath : '.app'
     }
 };
 
@@ -22,26 +28,26 @@ var transpileClient =
         }))
         .pipe(gulp.dest('.tmp'));
 
-
-
 //Tasks::Prod
 gulp.task('build', function() { return compileScripts(); });
 
-//Tasks:dev
-//lazy pipes are used when you want to set an order of execution in your pipes if you don't add the lazypipe for the
-//transpileClient function it will not execute on the right order (haven't digged depper on this)
-//
 gulp.task('transpile:client', function() {
     return  transpileClient();
 });
 
 gulp.task('dev:copy-index', function(){
     gulp.src(app.paths.index)
-    .pipe(gulp.dest('.tmp'));
+    .pipe(gulp.dest(app.paths.tempFolder));
+});
+
+gulp.task('wiredep:dev', function () {
+  gulp.src('./app/index.html')
+    .pipe(wiredep())
+    .pipe(gulp.dest('app/'));
 });
 
 gulp.task('webserver', function() {
-gulp.src('./app')
+gulp.src([app.paths.tempFolder, './bower_components'])
     .pipe(webserver({
         livereload: {
             enable: true,// need this set to true to enable livereload
@@ -49,11 +55,28 @@ gulp.src('./app')
         fallback: 'index.html',//use html5Mode for my single page app with this plugin
         directoryListing: {
             enable: false,
-            path: 'app'
+            path: '.tmp'
         },
+        path: './',
         open: true,
         host: 'localhost',
         port: 9000
+    }));
+});
+
+/*
+*requiring the tmp folder and the whole root of the project so we can use bower_components and other
+* folders inside this server this results in a slower code maybe researching wiredep optin to hange
+* the kind of path
+ */
+gulp.task('start:client', function(cb){
+    gulp.src([app.paths.tempFolder, './'])
+    .pipe(server({
+          livereload: true,
+          directoryListing: false,
+          open: true,
+          host: config.host,
+          port: config.port
     }));
 });
 
@@ -62,7 +85,7 @@ gulp.task('dev:watch', function() {
     gulp.watch(app.paths.index, ['dev:copy-index']);
 });
 
-gulp.task('default', ['dev:copy-index','dev:watch','webserver']);
+gulp.task('default', ['wiredep:dev', 'dev:copy-index','dev:watch','start:client']);
 //gulp.task('prod:dist',[]); //under development
 //
 
