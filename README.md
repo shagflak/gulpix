@@ -9,7 +9,7 @@ without the complexity of various others base projects that are out there.
 You need to have installed:
 
 * node > 4.4.3
-* npm wich it is included with node
+* npm which it is included with node
 
 #Installation
 
@@ -24,7 +24,7 @@ gulp
 
 #Changelog
 
-More abstract development on this project it's planned for the near future but for the moment this is just a sandbox project to mess with if you are learning something like angular,redux,react, vue etc etc because at this phase this project it's "framework agnostic"
+More abstract development on this project it's planned for the near future but for the moment this is just a sandbox project to mess with, if you are learning something like angular,redux,react, vue etc etc because at this phase this project it's "framework agnostic"
 so you can go and add your favorite library.
 
 Changes on hold include:
